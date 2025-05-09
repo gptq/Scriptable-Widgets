@@ -1,11 +1,12 @@
 /* --------------------------------------------------------------
-Gold Widget for Scriptable using alltick.co API - v1.5.0
+Gold Widget for Scriptable using alltick.co API - v1.5.1
 - Fetches XAU/CNH price, converts to CNH/gram.
 - Trend based on previous 1-min candle vs current.
 - Uses LAST element from API response as current data.
 - A-Share Colors (Red Up, Green Down).
 - Displays update time (forced to Asia/Shanghai).
 - Configurable Refresh Logic.
+- Includes Referer, Origin, and User-Agent headers for API request.
 
 Original Stock Widget Concept by Chrischi-
 Modifications by User & AI assistant
@@ -16,7 +17,7 @@ Modifications by User & AI assistant
 const widget_config = {
     update_full_minutes: 5, // Default refresh interval (minutes) - iOS might override
     offset_minutes: 0,      // Default refresh offset (minutes)
-    default_smoothPath: 0   // Default chart smoothing (0 = straight, 1 = smooth)
+    default_smoothPath: 0    // Default chart smoothing (0 = straight, 1 = smooth)
 };
 
 // --- Global Variables & Constants ---
@@ -29,8 +30,8 @@ const apiUrl = "https://alltick.co/quote/kline";
 if (args.widgetParameter) {
     smoothPath = parseInt(args.widgetParameter);
     if (isNaN(smoothPath) || (smoothPath !== 0 && smoothPath !== 1)) { // Validate input
-      console.warn(`Invalid smoothPath parameter: "${args.widgetParameter}". Using default: ${widget_config.default_smoothPath}`);
-      smoothPath = widget_config.default_smoothPath;
+        console.warn(`Invalid smoothPath parameter: "${args.widgetParameter}". Using default: ${widget_config.default_smoothPath}`);
+        smoothPath = widget_config.default_smoothPath;
     }
 }
 
@@ -49,7 +50,12 @@ async function fetchGoldData(numPoints, klineType) {
     try {
         const req = new Request(apiUrl);
         req.method = "POST";
-        req.headers = { "Content-Type": "application/json" };
+        req.headers = {
+            "Content-Type": "application/json",
+            "Referer": "https://alltick.co/",
+            "Origin": "https://alltick.co/",
+            "User-Agent": "Mozilla/5.0"
+        };
         req.body = JSON.stringify(payload);
         const response = await req.loadJSON();
         if (response && response.ret === 200 && response.data && response.data.kline_list && response.data.kline_list.length > 0) {
@@ -177,7 +183,7 @@ async function createWidget() {
         let img = chartStack.addImage(chart);
         img.applyFittingContentMode();
     } else {
-         list.addText("图表数据不足").textColor = Color.gray();
+        list.addText("图表数据不足").textColor = Color.gray();
     }
 
     list.addSpacer(10); // Spacer above main price
@@ -206,7 +212,7 @@ async function createWidget() {
         } catch (e) { console.error("Error processing timestamp:", e); }
     } else { console.warn("Timestamp missing in currentDataPoint:", currentDataPoint); }
     let timeText = list.addText(updateTimeString);
-  
+
     timeText.textColor = Color.gray();
     timeText.rightAlignText();
 
@@ -270,15 +276,15 @@ class LineChart {
     return path;
   }
 
-   _getPath(points) {
-       let path = new Path();
-       if (points.length === 0) return path;
-       path.move(points[0]);
-       for (var i = 1; i < points.length; i++) {
-           path.addLine(points[i]);
-       }
-       return path;
-   }
+    _getPath(points) {
+        let path = new Path();
+        if (points.length === 0) return path;
+        path.move(points[0]);
+        for (var i = 1; i < points.length; i++) {
+            path.addLine(points[i]);
+        }
+        return path;
+    }
 
   configure(fn) {
     if (!this.values || this.values.length < 2) {
