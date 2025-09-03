@@ -15,7 +15,7 @@ Modifications by User & AI assistant
 // --- Configuration ---
 // You can adjust these default values
 const widget_config = {
-    update_full_minutes: 5, // Default refresh interval (minutes) - iOS might override
+    update_full_minutes: 0.5, // Default refresh interval (minutes) - iOS might override
     offset_minutes: 0,      // Default refresh offset (minutes)
     default_smoothPath: 0    // Default chart smoothing (0 = straight, 1 = smooth)
 };
@@ -311,10 +311,16 @@ let widget = await createWidget();
 
 
 
+// 在脚本末尾修改刷新时间设置
 let now = new Date()
-let then = new Date(now.getTime() + 5 * 60 * 1000)
+let then = new Date(now.getTime() + 30 * 1000) // 改为30秒 (+30秒)
 let timer = widget.addDate(then)
 timer.applyRelativeStyle()
+
+// 可选：添加更激进的刷新策略
+widget.refreshAfterDate = then // 强制指定刷新时间
+
 widget.presentSmall()
 Script.setWidget(widget)
 Script.complete()
+widget.url = "scriptable:///run?scriptName=" + Script.name()
